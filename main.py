@@ -1,48 +1,71 @@
+import pandas as pd
 from src.utils import load_config, setup_logger
 from src.data_loader import DataLoader
 from src.features import FeatureEngineer
 from src.model import UnsupervisedModel
-
+from src.model_supervised import SupervisedModel # <--- NEW IMPORT
 
 def main():
-    # Setup
     config = load_config()
     logger = setup_logger("Main", config['paths']['logs'])
+    logger.info("--- Pipeline Started ---")
 
-    logger.info("Pipeline started")
-
-    try: 
-        # Load data
+    try:
         loader = DataLoader(config)
         failures = loader.load_failures()
-        
-        # Load Asset 50
-        df = loader.load_turbine(config['assets']['target_asset'])
-        
-        # Test Feature Engineering
         engineer = FeatureEngineer(config)
         
-        # Test Target Creation
-        df = engineer.create_target(df, failures, asset_id=config['assets']['target_asset'])
+        # ==========================================
+        # PART 1: PREPARE TEST DATA (Asset 50)
+        # ==========================================
+        logger.info("--- Preparing Test Data (Asset 50) ---")
+        df_test = loader.load_turbine(config['assets']['target_asset'])
+        df_test = engineer.create_target(df_test, failures, config['assets']['target_asset'])
+        df_test = engineer.create_rolling_features(df_test)
         
-        # Test Rolling Features
-        df = engineer.create_rolling_features(df)
+        # ==========================================
+        # PART 2: UNSUPERVISED APPROACH (Isolation Forest)
+        # ==========================================
+        logger.info("--- Running Unsupervised Approach ---")
+        unsup_model = UnsupervisedModel(config)
+        unsup_model.select_features(df_test)
+        scores = unsup_model.train(df_test)
+        best_threshold = unsup_model.optimize_threshold(scores, df_test['target'])
+        unsup_model.evaluate(scores, df_test['target'], best_threshold)
         
-        # Model Training
-        model = UnsupervisedModel(config)
-        model.select_features(df)
-        scores = model.train(df)
-        best_threshold = model.optimize_threshold(scores, df['target'])
-        model.evaluate(scores, df['target'], best_threshold)
+        # ==========================================
+        # PART 3: SUPERVISED APPROACH (XGBoost)
+        # ==========================================
+        logger.info("--- Running Supervised Approach (Fleet Learning) ---")
         
-        logger.info("--- Pipeline Finished Successfully ---")
+        # A. Load Fleet Data (12, 15, 16)
+        train_dfs = []
+        for asset_id in config['assets']['train_assets']:
+            try:
+                df = loader.load_turbine(asset_id)
+                df = engineer.create_target(df, failures, asset_id)
+                df = engineer.create_rolling_features(df)
+                train_dfs.append(df)
+            except Exception as e:
+                logger.warning(f"Skipping Train Asset {asset_id}: {e}")
+        
+        if train_dfs:
+            # Combine into one big training set
+            df_train = pd.concat(train_dfs)
+            
+            # B. Train & Evaluate
+            sup_model = SupervisedModel(config)
+            sup_model.train(df_train)
+            sup_model.evaluate(df_test)
+        else:
+            logger.error("No training data loaded for Supervised Model!")
 
+        logger.info("--- Pipeline Finished Successfully ---")
+        
     except Exception as e:
         logger.error(f"Pipeline Failed: {e}")
-        # Print full error for debugging
         import traceback
         traceback.print_exc()
-
 
 if __name__ == "__main__":
     main()
