@@ -3,7 +3,7 @@ from src.utils import load_config, setup_logger
 from src.data_loader import DataLoader
 from src.features import FeatureEngineer
 from src.model import UnsupervisedModel
-from src.model_supervised import SupervisedModel # <--- NEW IMPORT
+from src.model_supervised import SupervisedModel
 
 def main():
     config = load_config()
@@ -29,10 +29,36 @@ def main():
         logger.info("--- Running Unsupervised Approach ---")
         unsup_model = UnsupervisedModel(config)
         unsup_model.select_features(df_test)
+        
+        # Train & Optimize
         scores = unsup_model.train(df_test)
         best_threshold = unsup_model.optimize_threshold(scores, df_test['target'])
         unsup_model.evaluate(scores, df_test['target'], best_threshold)
         
+        # --- EVIDENCE CALCULATION (The "Smoking Gun" for your Report) ---
+        # We calculate exactly when the first alarm went off
+        df_test['score'] = scores
+        df_test['pred'] = [1 if s < best_threshold else 0 for s in scores]
+        
+        # Look only at the 14-day failure window
+        danger_zone = df_test[df_test['target'] == 1]
+        
+        # Find alarms inside that window
+        true_alarms = danger_zone[danger_zone['pred'] == 1]
+        
+        if not true_alarms.empty:
+            first_alarm = true_alarms.index.min()
+            failure_date = danger_zone.index.max()
+            lead_time = failure_date - first_alarm
+            
+            logger.info("=== CUSTOMER VALUE EVIDENCE ===")
+            logger.info(f"Actual Failure Date:    {failure_date}")
+            logger.info(f"First Alarm Triggered:  {first_alarm}")
+            logger.info(f"✅ SYSTEM LEAD TIME:     {lead_time}")
+            logger.info("===============================")
+        else:
+            logger.warning("No alarms triggered during the failure window!")
+
         # ==========================================
         # PART 3: SUPERVISED APPROACH (XGBoost)
         # ==========================================

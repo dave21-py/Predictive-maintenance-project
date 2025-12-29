@@ -19,8 +19,7 @@ class SupervisedModel:
         Trains XGBoost on the Fleet Data.
         """
         self.logger.info(f"Training XGBoost on {len(df_train)} rows...")
-        
-        # --- FIX: ROBUST FEATURE SELECTION ---
+    
         # 1. Select only Numeric columns
         # 2. Drop known metadata columns explicitly
         exclude_cols = ['target', 'asset_id', 'group_id', 'status_type_id', 'train_test']

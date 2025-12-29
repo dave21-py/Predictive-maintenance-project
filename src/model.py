@@ -19,7 +19,7 @@ class UnsupervisedModel:
 
     def select_features(self, df):
         """
-        WP 1: Feature Selection.
+        Feature Selection.
         Instead of using all 4000+ features, we find the ones that 
         actually correlate with the failure target.
         """
@@ -80,8 +80,7 @@ class UnsupervisedModel:
 
     def optimize_threshold(self, scores, y_true):
         """
-        WP 2: Threshold Optimization.
-        Finds the cut-off that guarantees 80% Recall.
+        Threshold Optimization.
         """
         self.logger.info("Optimizing Threshold for High Recall...")
         
