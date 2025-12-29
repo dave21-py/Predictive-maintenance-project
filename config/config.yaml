@@ -1,0 +1,26 @@
+paths:
+  raw_data: "data/raw/Wind Farm C"
+  processed_data: "data/processed"
+  logs: "logs/pipeline.log"
+  outputs: "outputs/"
+
+assets:
+  target_asset: 50
+  train_assets: [12,15,16]
+
+feature_engineering:
+  window_days: 14
+  # 1 hour(6) and 24 hours(144) for trends
+  rolling_windows: [6, 144]
+  keywords: ["gearbox", "generator", "bearing"]
+
+models:
+  supervised:
+    type: "xgboost"
+    imbalance_ratio: "auto"
+  unsupervised:
+    type: "isolation_forest"
+    n_estimators: 200
+    random_state: 42
+    contamination: "auto"
+

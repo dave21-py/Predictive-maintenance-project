@@ -1,47 +1,51 @@
 import pandas as pd
 import numpy as np
 import os
-import json
+import sys
+import logging
 
 
-class WindDataLoader():
-    def __init__(self, data_path, farm_name="Wind Farm C"):
-        self.base_path = os.path.join(data_path, farm_name)
-        self.dataset_path = os.path.join(self.base_path, "datasets")
-        self.failures_path = os.path.join(self.base_path, "event_info.csv")
-        self.features_path = os.path.join(self.base_path, "selected_features.json")
+class DataLoader:
+    def __init__(self, config):
+        self.config = config
+        self.logger = logging.getLogger("DataLoader")
+        self.base_path = config['paths']['raw_data']
 
-        # Load the selected features list created from the notebook
-        with open(self.features_path, "r") as f:
-            self.selected_features = json.load(f)
-        
     def load_failures(self):
-        """Loads the failure log"""
-        df = pd.read_csv(self.failures_path, delimiter=";")
+        """Loads the failure events file."""
+        path = os.path.join(self.base_path, "datasets", "event_info.csv")
+
+        # Check if file exists
+        if not os.path.exists(path):
+            path = os.path.join(self.base_path, "event_info.csv")
+        
+        if not os.path.exists(path):
+            self.logger.error(f"File not found, Checked {path}")
+            sys.exit(1)
+
+        self.logger.info(f"Loading failures from {path}")
+        df = pd.read_csv(path, delimiter=";")
         return df
 
-    def load_turbine_data(self, asset_id):
-        """Loads sensor data for single turbine and flter features"""
-        file_path = os.path.join(self.dataset_path, f"{asset_id}.csv")
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Data for asset {asset_id} not found.")
+    def load_turbine(self, asset_id):
+        """Loads sensor data for a specific turbine."""
+        path = os.path.join(self.base_path, "datasets", f"{asset_id}.csv")
+        self.logger.info(f"Loading sensor data for Asset {asset_id}")
+        if not os.path.exists(path):
+            self.logger.error(f"File not found in {path}")
+            raise FileNotFoundError(f"Asset ID {asset_id} not found.")
 
+        try:
+            # Read csv
+            df = pd.read_csv(path, delimiter=";")
 
-        cols_to_use = ['time_stamp'] + [c for c in self.selected_features if c!= 'time_stamp']
+            # Convert time
+            df['time_stamp'] = pd.to_datetime(df['time_stamp'])
+            df = df.set_index('time_stamp').sort_index()
 
-        # Read csv
-        df = pd.read_csv(file_path, delimiter=";", usecols=lambda c: c in cols_to_use)
+            self.logger.info(f"Loaded {df.shape[0]} rows for asset {asset_id}")
+            return df
 
-        # Parse dates
-        df['time_stamp'] = pd.to_datetime(df['time_stamp'])
-        df = df.sort_values('time_stamp').set_index('time_stamp')
-        return df
-
-
-if __name__ == "__main__":
-    loader = WindDataLoader("data")
-    print(f"Loaded {len(loader.selected_features)} features.")
-
-    df = loader.load_turbine_data(50)
-    print(f"Asset 50 data shape: {df.shape}")
-
+        except Exception as e:
+            self.logger.error(f"Error reading Asset {asset_id}")
+            raise
