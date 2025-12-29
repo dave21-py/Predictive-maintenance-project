@@ -53,6 +53,8 @@ wind-turbine-maintenance/
 ├── main.py                  # Pipeline Entry Point
 ├── .gitignore               # .gitignore python template
 ├── README.md                # Documentation
+├── Dockerfile               # Docker Image
+├── Makefile                 # Make file
 └── requirements.txt         # Dependency Management
 ```
 
