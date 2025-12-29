@@ -158,7 +158,7 @@ Recall: 0.00
 (venv) dave@155 wind-turbine-maintenance % 
 ```
 
-#### Setup
+#### Setup (Option 1)
 
 **Prerequisites:** Python 3.8+
 
@@ -179,3 +179,13 @@ Recall: 0.00
 
 4.  **View Outputs:**
     Results (Confusion Matrices, Anomaly Plots) are saved to the `outputs/` directory. Logs are written to `logs/pipeline.log`.
+
+#### Run Locally (Option 2)
+
+```text
+RUN
+make docker-build
+
+THEN
+make docker-run
+```
