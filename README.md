@@ -1,7 +1,7 @@
 ### Predictive Maintenance Pipeline for Industrial Wind Turbines
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
-![Machine Learning](https://img.shields.io/badge/Machine Learning-Supervised & Unsupervised-red)
+![Machine Learning](https://img.shields.io/badge/Machine-Learning-Supervised%2FUnsupervised-red)
 
 
 **Architecture:** Modular Python Pipeline | **Model:** Unsupervised Isolation Forest vs. XGBoost | **Result:** 80 Days Lead Time
