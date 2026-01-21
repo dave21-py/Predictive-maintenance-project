@@ -15,4 +15,8 @@ docker-build:
 		docker build -t wind-turbine-maintainer .
 
 docker-run:
-		docker run --rm -v $(PWD)/outputs:/app/outputs -v $(PWD)/logs:/app/logs wind-turbine-maintainer
+		docker run --rm \
+		-v $(PWD)/data:/app/data \
+		-v $(PWD)/outputs:app/outputs \
+		-v $(PWD)/logs:/app/logs \
+		wind-turbine-maintainer

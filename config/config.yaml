@@ -1,5 +1,5 @@
 paths:
-  raw_data: "data/raw/Wind Farm C"
+  raw_data: "data"
   processed_data: "data/processed"
   logs: "logs/pipeline.log"
   outputs: "outputs/"
@@ -9,18 +9,17 @@ assets:
   train_assets: [12,15,16]
 
 feature_engineering:
-  window_days: 14
+  window_days: 14 # Tells the model to look at the 14 days leading up to a failure to find patterns, 
   # 1 hour(6) and 24 hours(144) for trends
-  rolling_windows: [6, 144]
-  keywords: ["gearbox", "generator", "bearing"]
+  rolling_windows: [6] #  6 Represents 1 hour of data (assuming sensors record every 10 minutes). Represents 24 hours of data. This captures slow wear and tear or temperature trends over a full day.
 
 models:
-  supervised:
-    type: "xgboost"
-    imbalance_ratio: "auto"
-  unsupervised:
-    type: "isolation_forest"
-    n_estimators: 200
-    random_state: 42
-    contamination: "auto"
+  vae:
+    latent_dim: 10 # This forces encoder to pick the 10 most important "features" (like vibration frequency, heat trend, and pressure).
+    hidden_dim: 256 # Needs to be larger to hold that info 
+    learning_rate: 0.0001
+    epochs: 200
+    batch_size: 64
+    patience: 10 # stop if no improvement for 10 epochs
+
 

@@ -1,0 +1,18 @@
+
+data/
+logs/
+outputs/
+
+
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+
+venv/
+.env
+
+# Ignore Git
+.git
+.gitignore

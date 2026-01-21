@@ -1,8 +1,8 @@
 pandas
 numpy
 matplotlib
-xgboost
 scikit-learn
 seaborn
-jupyter
 pyyaml
+torch
+torchvision

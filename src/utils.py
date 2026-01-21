@@ -1,6 +1,7 @@
 import os
 import logging
 import yaml
+import torch
 
 def load_config(config_path="config/config.yaml"):
     """
@@ -42,3 +43,15 @@ def setup_logger(name, log_file):
     logger.addHandler(c_handler)
 
     return logger
+
+def get_device():
+    """
+    Automatically selects the best available hardware.
+    Priority: Mac GPU (MPS) > CPU
+    """
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    elif torch.cuda.is_available():
+        return torch.device("cuda")
+    else:
+        return torch.device("cpu")
