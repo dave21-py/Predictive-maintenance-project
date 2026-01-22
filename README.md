@@ -14,3 +14,6 @@ We implemented a **Variational Autoencoder (VAE)** to learn the physical manifol
 #### Results
 *   **Lead Time:** Identified a clear precursor anomaly in September 2023, providing a 60-day warning before the total system crash in October.
 *   **Signal:** Reconstruction error spiked to **60.0 MSE** (vs 1.7 threshold) during pre-failure chatter.
+
+PLS SEE PDF FOR FULL DETAILS
+![PDF](Poster.pdf)
