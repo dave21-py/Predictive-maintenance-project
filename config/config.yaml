@@ -22,4 +22,20 @@ models:
     batch_size: 64
     patience: 10 # stop if no improvement for 10 epochs
 
+  wjepa:
+    latent_dim: 64
+    encoder_hidden_dim: 256
+    predictor_hidden_dim: 256
+    learning_rate: 0.0001
+    epochs: 50
+    batch_size: 256
+    patience: 10
+    invariance_weight: 25.0
+    variance_weight: 25.0
+    covariance_weight: 1.0
+    gamma: 1.0
+    lambda_power: 15.0
+    ema_momentum: 0.99
+    power_column: "power_2_avg"
+
 

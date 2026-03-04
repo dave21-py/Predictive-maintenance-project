@@ -54,11 +54,32 @@ class DataLoader:
 
     def load_turbine(self, asset_id):
         """Loads sensor data for a specific turbine."""
-        path = os.path.join(self.base_path, "datasets", f"{asset_id}.csv")
+        # Default CARE layout: data/datasets/{asset_id}.csv
+        candidate_paths = [
+            os.path.join(self.base_path, "datasets", f"{asset_id}.csv"),
+        ]
+
+        # Also support Wind Farm subdirectories, e.g. data/Wind Farm C/datasets/{asset_id}.csv
+        for farm_name in os.listdir(self.base_path):
+            farm_path = os.path.join(self.base_path, farm_name)
+            if not os.path.isdir(farm_path):
+                continue
+            candidate_paths.append(
+                os.path.join(farm_path, "datasets", f"{asset_id}.csv")
+            )
+
+        path = None
+        for cand in candidate_paths:
+            if os.path.exists(cand):
+                path = cand
+                break
+
         self.logger.info(f"Loading sensor data for Asset {asset_id}")
-        if not os.path.exists(path):
-            self.logger.error(f"File not found in {path}")
-            raise FileNotFoundError(f"Asset ID {asset_id} not found.")
+        if path is None:
+            self.logger.error(
+                f"File for asset {asset_id} not found in any known datasets folder."
+            )
+            raise FileNotFoundError(f"Asset ID {asset_id} not found in data folders.")
 
         try:
             # Read csv

@@ -6,3 +6,4 @@ seaborn
 pyyaml
 torch
 torchvision
+joblib
