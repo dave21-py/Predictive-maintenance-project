@@ -13,3 +13,9 @@ logs/
 # IDE
 .vscode/
 .DS_Store
+# Local data and PDFs
+Abstract.pdf
+Poster.pdf
+data/Wind Farm A/
+data/Wind Farm B/
+data/Wind Farm C/
