@@ -54,6 +54,9 @@ def _fit_scaler_and_selector(
 
     joblib.dump(scaler, os.path.join("artifacts", "wjepa_scaler.pkl"))
     joblib.dump(selector, os.path.join("artifacts", "wjepa_selector.pkl"))
+    # Save BOTH the pre-selection feature list (what selector expects)
+    # and the post-selection feature list (what scaler expects).
+    joblib.dump(features, os.path.join("artifacts", "wjepa_full_features.pkl"))
     joblib.dump(selected_features, os.path.join("artifacts", "wjepa_features.pkl"))
 
     return X_scaled, P, selected_features

@@ -18,11 +18,11 @@ from src.trainer_wjepa import build_subsystem_slices
 def load_artifacts(artifacts_dir: str = "artifacts"):
     scaler = joblib.load(os.path.join(artifacts_dir, "wjepa_scaler.pkl"))
     selector = joblib.load(os.path.join(artifacts_dir, "wjepa_selector.pkl"))
-    feature_names: List[str] = joblib.load(
-        os.path.join(artifacts_dir, "wjepa_features.pkl")
+    full_feature_names: List[str] = joblib.load(
+        os.path.join(artifacts_dir, "wjepa_full_features.pkl")
     )
     state_dict = torch.load(os.path.join(artifacts_dir, "wjepa_world_model.pt"))
-    return scaler, selector, feature_names, state_dict
+    return scaler, selector, full_feature_names, state_dict
 
 
 def prepare_asset_dataframe(config, asset_id: int) -> pd.DataFrame:
@@ -37,9 +37,20 @@ def prepare_asset_dataframe(config, asset_id: int) -> pd.DataFrame:
     return df
 
 
-def transform_with_artifacts(df: pd.DataFrame, scaler, selector, feature_names: List[str]):
-    X = df[feature_names].values
-    X_sel = selector.transform(X)
+def transform_with_artifacts(
+    df: pd.DataFrame, scaler, selector, full_feature_names: List[str]
+):
+    """
+    IMPORTANT:
+    - selector was fit on the FULL feature matrix (pre-selection).
+    - scaler was fit on the SELECTED feature matrix (post-selection).
+    So we must:
+      1) build X with full_feature_names
+      2) apply selector.transform(X)
+      3) apply scaler.transform(X_selected)
+    """
+    X_full = df[full_feature_names].values
+    X_sel = selector.transform(X_full)
     X_scaled = scaler.transform(X_sel)
     return X_scaled
 
@@ -85,14 +96,18 @@ def main():
     target_asset = config["assets"]["target_asset"]
 
     try:
-        scaler, selector, feature_names, state_dict = load_artifacts()
+        scaler, selector, full_feature_names, state_dict = load_artifacts()
 
         df_test = prepare_asset_dataframe(config, target_asset)
-        X_scaled = transform_with_artifacts(df_test, scaler, selector, feature_names)
+        X_scaled = transform_with_artifacts(
+            df_test, scaler, selector, full_feature_names
+        )
 
         # Build model with same feature mapping as training
         wj_cfg = config["models"]["wjepa"]
-        subsystem_slices = build_subsystem_slices(feature_names)
+        support = selector.get_support(indices=True)
+        selected_feature_names = [full_feature_names[i] for i in support]
+        subsystem_slices = build_subsystem_slices(selected_feature_names)
 
         model = WJEPAWorldModel(
             input_dim=X_scaled.shape[1],
